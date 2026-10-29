@@ -932,6 +932,26 @@ var cases = []struct {
 		},
 		pos: uv.Pos(3, 2),
 	},
+	{
+		name: "DECSTBM Bottom Beyond Screen",
+		w:    8, h: 3,
+		input: []string{
+			"\x1b[1;1H", // move to top-left
+			"\x1b[2J",   // clear screen
+			"ABC\r\n",
+			"DEF\r\n",
+			"GHI",
+			"\x1b[1;30r", // bottom margin past the screen: the whole screen
+			"\x1b[3;1H",  // move to the last line
+			"\x1b[S",     // scroll up
+		},
+		want: []string{
+			"DEF     ",
+			"GHI     ",
+			"        ",
+		},
+		pos: uv.Pos(0, 2),
+	},
 
 	// Set Left/Right Margins [ansi.DECSLRM]
 	{
@@ -997,6 +1017,28 @@ var cases = []struct {
 			"GH      ",
 		},
 		pos: uv.Pos(0, 0),
+	},
+	{
+		name: "DECSLRM Right Beyond Screen",
+		w:    8, h: 4,
+		input: []string{
+			"\x1b[1;1H", // move to top-left
+			"\x1b[2J",   // clear screen
+			"ABC\r\n",
+			"DEF\r\n",
+			"GHI",
+			"\x1b[?69h",  // enable left/right margins
+			"\x1b[2;30s", // right margin past the screen: the last column
+			"\x1b[2G",    // move cursor to column 2
+			"\x1b[L",
+		},
+		want: []string{
+			"A       ",
+			"DBC     ",
+			"GEF     ",
+			" HI     ",
+		},
+		pos: uv.Pos(1, 0),
 	},
 	{
 		name: "DECSLRM Left Equal to Right",

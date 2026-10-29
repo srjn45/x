@@ -871,13 +871,14 @@ func (e *Emulator) registerDefaultCsiHandlers() {
 			bottom = height
 		}
 
-		if top >= bottom {
+		if top >= bottom || top > height {
 			return false
 		}
 
 		// Rect is [x, y) which means y is exclusive. So the top margin
 		// is the top of the screen minus one.
-		e.scr.setVerticalMargins(top-1, bottom)
+		// A bottom margin past the screen ends at its last line.
+		e.scr.setVerticalMargins(top-1, min(bottom, height))
 
 		// Move the cursor to the top-left of the screen or scroll region
 		// depending on [ansi.DECOM].
@@ -904,11 +905,12 @@ func (e *Emulator) registerDefaultCsiHandlers() {
 				right = width
 			}
 
-			if left >= right {
+			if left >= right || left > width {
 				return false
 			}
 
-			e.scr.setHorizontalMargins(left-1, right)
+			// A right margin past the screen ends at its last column.
+			e.scr.setHorizontalMargins(left-1, min(right, width))
 
 			// Move the cursor to the top-left of the screen or scroll region
 			// depending on [ansi.DECOM].
