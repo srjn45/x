@@ -1898,3 +1898,18 @@ func TestMainScreenKeptUnderAltScreen(t *testing.T) {
 		t.Fatalf("alternate cursor: want 4,0, got %+v", cur)
 	}
 }
+
+func TestCharSets(t *testing.T) {
+	term := newTestTerminal(t, 10, 1)
+	if g, gl, _ := term.CharSets(); g != [4]byte{'B', 'B', 'B', 'B'} || gl != 0 {
+		t.Fatalf("want USASCII everywhere and G0 in GL, got %q %d", g, gl)
+	}
+	_, _ = term.WriteString("\x1b)0\x1b+A\x0e\x1b|")
+	if g, gl, gr := term.CharSets(); g != [4]byte{'B', '0', 'B', 'A'} || gl != 1 || gr != 3 {
+		t.Fatalf("want special drawing in G1, UK in G3, G1 in GL and G3 in GR, got %q %d %d", g, gl, gr)
+	}
+	_, _ = term.WriteString("\x1bc")
+	if g, gl, gr := term.CharSets(); g != [4]byte{'B', 'B', 'B', 'B'} || gl != 0 || gr != 1 {
+		t.Fatalf("want the sets reset, got %q %d %d", g, gl, gr)
+	}
+}

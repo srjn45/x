@@ -1,6 +1,7 @@
 package vt
 
 import (
+	"cmp"
 	"image/color"
 	"io"
 
@@ -26,8 +27,10 @@ type Emulator struct {
 	scrs [2]Screen
 	scr  *Screen
 
-	// Character sets
-	charsets [4]CharSet
+	// Character sets, and the final byte of the sequence that designated
+	// each; 0 for USASCII.
+	charsets    [4]CharSet
+	designators [4]byte
 
 	// log is the logger to use.
 	logger Logger
@@ -511,4 +514,14 @@ func (e *Emulator) MainScreen() *Screen {
 // AltScreen returns the alternate screen.
 func (e *Emulator) AltScreen() *Screen {
 	return &e.scrs[1]
+}
+
+// CharSets returns how G0 to G3 were designated, as the final byte of their
+// SCS sequence ('B' for USASCII, 'A' for UK, '0' for DEC special drawing),
+// and which of them GL and GR invoke.
+func (e *Emulator) CharSets() (designators [4]byte, gl, gr int) {
+	for i, d := range e.designators {
+		designators[i] = cmp.Or(d, 'B')
+	}
+	return designators, e.gl, e.gr
 }
