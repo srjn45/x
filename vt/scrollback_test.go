@@ -194,3 +194,21 @@ func TestScrollbackOnlyFromTheTop(t *testing.T) {
 		})
 	}
 }
+
+// TestAltScreenKeepsNoScrollback: what scrolls off the alternate screen is
+// not kept, and the main screen's scrollback is left as it was.
+func TestAltScreenKeepsNoScrollback(t *testing.T) {
+	e := newTestTerminal(t, 10, 3)
+	_, _ = e.WriteString("1\r\n2\r\n3\r\n4")
+	_, _ = e.WriteString("\x1b[?1049h")
+	for range 50 {
+		_, _ = e.WriteString("alt\r\n")
+	}
+	_, _ = e.WriteString("\x1b[2J\x1b[?1049l")
+	if sb := e.AltScreen().Scrollback(); sb != nil && sb.Len() > 0 {
+		t.Fatalf("want no scrollback on the alternate screen, got %d lines", sb.Len())
+	}
+	if n := e.ScrollbackLen(); n != 1 {
+		t.Fatalf("want the main screen's one line kept, got %d", n)
+	}
+}
