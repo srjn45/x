@@ -1,6 +1,7 @@
 package vt
 
 import (
+	"slices"
 	"testing"
 
 	uv "github.com/charmbracelet/ultraviolet"
@@ -1911,5 +1912,15 @@ func TestCharSets(t *testing.T) {
 	_, _ = term.WriteString("\x1bc")
 	if g, gl, gr := term.CharSets(); g != [4]byte{'B', 'B', 'B', 'B'} || gl != 0 || gr != 1 {
 		t.Fatalf("want the sets reset, got %q %d %d", g, gl, gr)
+	}
+}
+
+func TestCursorStyleCallbackBlink(t *testing.T) {
+	term := newTestTerminal(t, 10, 1)
+	var got []bool
+	term.SetCallbacks(Callbacks{CursorStyle: func(_ CursorStyle, blink bool) { got = append(got, blink) }})
+	_, _ = term.WriteString("\x1b[5 q\x1b[6 q")
+	if !slices.Equal(got, []bool{true, false}) {
+		t.Fatalf("want a blinking bar then a steady one, got blink %v", got)
 	}
 }
