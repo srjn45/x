@@ -1924,3 +1924,22 @@ func TestCursorStyleCallbackBlink(t *testing.T) {
 		t.Fatalf("want a blinking bar then a steady one, got blink %v", got)
 	}
 }
+
+// TestCloseWhileReading closes the terminal while another goroutine reads
+// its answers, as a program does: the race detector must find no race.
+func TestCloseWhileReading(t *testing.T) {
+	term := newTestTerminal(t, 10, 1)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		buf := make([]byte, 64)
+		for {
+			if _, err := term.Read(buf); err != nil {
+				return
+			}
+		}
+	}()
+	_, _ = term.WriteString("\x1b[6n")
+	_ = term.Close()
+	<-done
+}
