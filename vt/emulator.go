@@ -501,3 +501,14 @@ func (e *Emulator) ClearScrollback() {
 func (e *Emulator) IsAltScreen() bool {
 	return e.scr == &e.scrs[1]
 }
+
+// MainScreen returns the main screen, which keeps its cells and cursor
+// while the alternate screen is active.
+func (e *Emulator) MainScreen() *Screen {
+	return &e.scrs[0]
+}
+
+// AltScreen returns the alternate screen.
+func (e *Emulator) AltScreen() *Screen {
+	return &e.scrs[1]
+}
