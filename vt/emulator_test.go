@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
 )
 
 // testLogger wraps a testing.TB to implement the Logger interface.
@@ -1942,4 +1943,23 @@ func TestCloseWhileReading(t *testing.T) {
 	_, _ = term.WriteString("\x1b[6n")
 	_ = term.Close()
 	<-done
+}
+
+func TestModesAndTitle(t *testing.T) {
+	term := newTestTerminal(t, 10, 1)
+	if m := term.Modes(); !m[ansi.ModeAutoWrap].IsSet() || m[ansi.ModeBracketedPaste].IsSet() || term.Title() != "" {
+		t.Fatalf("want the defaults and no title, got %v, %q", m, term.Title())
+	}
+	_, _ = term.WriteString("\x1b[?7l\x1b[?2004h\x1b[4h\x1b]2;a title\x07")
+	m := term.Modes()
+	if m[ansi.ModeAutoWrap].IsSet() || !m[ansi.ModeBracketedPaste].IsSet() || !m[ansi.ModeInsertReplace].IsSet() {
+		t.Fatalf("want autowrap off, bracketed paste and insert on, got %v", m)
+	}
+	m[ansi.ModeAutoWrap] = ansi.ModeSet
+	if term.Modes()[ansi.ModeAutoWrap].IsSet() {
+		t.Fatal("want a copy of the modes")
+	}
+	if term.Title() != "a title" {
+		t.Fatalf("got title %q", term.Title())
+	}
 }

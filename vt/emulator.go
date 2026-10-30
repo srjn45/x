@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"image/color"
 	"io"
+	"maps"
 	"sync/atomic"
 
 	uv "github.com/charmbracelet/ultraviolet"
@@ -529,4 +530,16 @@ func (e *Emulator) CharSets() (designators [4]byte, gl, gr int) {
 		designators[i] = cmp.Or(d, 'B')
 	}
 	return designators, e.gl, e.gr
+}
+
+// Modes returns a copy of the terminal's modes: the recognized ones, at
+// their defaults until the output changes them, and every other mode the
+// output set or reset.
+func (e *Emulator) Modes() ansi.Modes {
+	return maps.Clone(e.modes)
+}
+
+// Title returns the window title the output set, "" until it sets one.
+func (e *Emulator) Title() string {
+	return e.title
 }
