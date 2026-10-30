@@ -23,6 +23,18 @@ func TestDcsSequence(t *testing.T) {
 			},
 		},
 		{
+			name:  "utf8_with_st_byte",
+			input: "\x1bP1$t\u2733\x9cx",
+			expected: []any{
+				dcsSequence{
+					Cmd:    't' | '$'<<parser.IntermedShift,
+					Params: Params{1},
+					Data:   []byte("\u2733"),
+				},
+				'x',
+			},
+		},
+		{
 			name:  "reset",
 			input: "\x1b[3;1\x1bP1$tx\x9c",
 			expected: []any{

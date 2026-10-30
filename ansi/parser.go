@@ -39,6 +39,10 @@ type Parser struct {
 	// number of rune bytes collected.
 	paramsLen int
 
+	// stringRune is how many bytes of a UTF-8 character are still due in an
+	// OSC or DCS string.
+	stringRune int
+
 	// cmd contains the raw command along with the private prefix and
 	// intermediate bytes of the sequence.
 	// The first lower byte contains the command byte, the next byte contains
@@ -125,6 +129,7 @@ func (p *Parser) Data() []byte {
 // Reset resets the parser to its initial state.
 func (p *Parser) Reset() {
 	p.clear()
+	p.stringRune = 0
 	p.state = parser.GroundState
 }
 
@@ -162,9 +167,30 @@ func (p *Parser) Advance(b byte) parser.Action {
 	case parser.Utf8State:
 		// We handle UTF-8 here.
 		return p.advanceUtf8(b)
-	default:
-		return p.advance(b)
+	case parser.OscStringState, parser.DcsStringState:
+		if p.continuesRune(b) {
+			p.performAction(parser.PutAction, p.state, b)
+			return parser.PutAction
+		}
 	}
+	return p.advance(b)
+}
+
+// continuesRune reports whether b, in an OSC or DCS string, is a later byte of
+// a UTF-8 character. Such a byte can be 0x9C, as in the E2 9C B3 of U+2733,
+// and is then text rather than the C1 string terminator. C2 is not followed:
+// C2 9C is the terminator itself, U+009C.
+func (p *Parser) continuesRune(b byte) bool {
+	switch {
+	case p.stringRune > 0 && b >= 0x80 && b <= 0xBF:
+		p.stringRune--
+		return true
+	case b >= 0xC3 && b <= 0xF4:
+		p.stringRune = utf8ByteLen(b) - 1
+	default:
+		p.stringRune = 0
+	}
+	return false
 }
 
 func (p *Parser) collectRune(b byte) {
