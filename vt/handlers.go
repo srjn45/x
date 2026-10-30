@@ -396,6 +396,7 @@ func (e *Emulator) registerDefaultEscHandlers() {
 			default:
 				return false
 			}
+			e.designators[set] = c.Final()
 			return true
 		})
 	}
