@@ -1878,3 +1878,23 @@ func TestShiftOutShiftIn(t *testing.T) {
 		}
 	}
 }
+
+func TestMainScreenKeptUnderAltScreen(t *testing.T) {
+	term := newTestTerminal(t, 10, 3)
+	_, _ = term.WriteString("shell\r\n\x1b[1m$ ")
+	_, _ = term.WriteString("\x1b[?1049hless")
+
+	main, alt := term.MainScreen(), term.AltScreen()
+	if c := main.CellAt(0, 0); c == nil || c.Content != "s" {
+		t.Fatalf("main screen: want 's' at 0,0, got %+v", c)
+	}
+	if c := alt.CellAt(0, 0); c == nil || c.Content != "l" {
+		t.Fatalf("alternate screen: want 'l' at 0,0, got %+v", c)
+	}
+	if cur := main.Cursor(); cur.X != 2 || cur.Y != 1 || cur.Pen.Attrs&uv.AttrBold == 0 {
+		t.Fatalf("main cursor: want bold at 2,1, got %+v", cur)
+	}
+	if cur := alt.Cursor(); cur.X != 4 || cur.Y != 0 {
+		t.Fatalf("alternate cursor: want 4,0, got %+v", cur)
+	}
+}
