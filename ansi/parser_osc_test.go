@@ -32,6 +32,30 @@ func TestOscSequence(t *testing.T) {
 			},
 		},
 		{
+			name:  "utf8_with_st_byte",
+			input: "\x1b]0;\u2733 title\x07x",
+			expected: []any{
+				[]byte("0;\u2733 title"),
+				'x',
+			},
+		},
+		{
+			name:  "utf8_with_st_byte_st_terminated",
+			input: "\x1b]0;\u00dc\x9cx",
+			expected: []any{
+				[]byte("0;\u00dc"),
+				'x',
+			},
+		},
+		{
+			name:  "st_terminated_after_broken_utf8",
+			input: "\x1b]0;\xe2 \x9cx",
+			expected: []any{
+				[]byte("0;\xe2 "),
+				'x',
+			},
+		},
+		{
 			name:  "bell_terminated",
 			input: "\x1b]11;ff/00/ff\x07",
 			expected: []any{
@@ -62,7 +86,7 @@ func TestOscSequence(t *testing.T) {
 			name:  "string_terminator",
 			input: "\x1b]2;\xe6\x9c\xab\x1b\\",
 			expected: []any{
-				[]byte("2;\xe6"),
+				[]byte("2;\xe6\x9c\xab"),
 				Cmd('\\'),
 			},
 		},
