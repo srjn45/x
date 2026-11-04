@@ -44,6 +44,10 @@ type Emulator struct {
 	// Terminal modes.
 	modes ansi.Modes
 
+	// The stacks of kitty keyboard flags of the main and the alternate
+	// screen, oldest first.
+	kitty [2][]int
+
 	// The last written character.
 	lastChar rune // either ansi.Rune or ansi.Grapheme
 	// The bytes of a grapheme cluster still being composed. Bytes rather than

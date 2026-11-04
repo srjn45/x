@@ -718,6 +718,27 @@ func (e *Emulator) registerDefaultCsiHandlers() {
 		return true
 	})
 
+	e.RegisterCsiHandler(ansi.Command('>', 0, 'u'), func(params ansi.Params) bool {
+		// Push kitty keyboard flags [ansi.PushKittyKeyboard]
+		flags, _, _ := params.Param(0, 0)
+		e.pushKittyFlags(flags)
+		return true
+	})
+
+	e.RegisterCsiHandler(ansi.Command('<', 0, 'u'), func(params ansi.Params) bool {
+		// Pop kitty keyboard flags [ansi.PopKittyKeyboard]
+		n, _, _ := params.Param(0, 1)
+		e.popKittyFlags(n)
+		return true
+	})
+
+	e.RegisterCsiHandler(ansi.Command('=', 0, 'u'), func(params ansi.Params) bool {
+		// Set kitty keyboard flags [ansi.KittyKeyboard]
+		flags, _, _ := params.Param(0, 0)
+		mode, _, _ := params.Param(1, 1)
+		return e.setKittyFlags(flags, mode)
+	})
+
 	e.RegisterCsiHandler('d', func(params ansi.Params) bool {
 		// Vertical Position Absolute [ansi.VPA]
 		n, _, _ := params.Param(0, 1)
