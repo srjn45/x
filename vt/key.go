@@ -21,15 +21,26 @@ const (
 // KeyPressEvent represents a key press event.
 type KeyPressEvent = uv.KeyPressEvent
 
-// SendKey returns the default key map.
+// SendKey sends a key to the program, encoded as its modes and kitty
+// keyboard flags ask.
 func (e *Emulator) SendKey(k uv.KeyEvent) {
 	var seq string
 
 	ack := e.isModeSet(ansi.ModeCursorKeys)    // Application cursor keys mode
 	akk := e.isModeSet(ansi.ModeNumericKeypad) // Application keypad keys mode
 
+	if key, ok := k.(KeyPressEvent); ok {
+		if flags := e.kittyFlagsInForce(); flags != 0 {
+			if seq, ok := kittyKey(key, flags); ok {
+				io.WriteString(e.pw, seq) //nolint:errcheck,gosec
+				return
+			}
+		}
+	}
+
 	//nolint:godox
-	// TODO: Support Kitty, CSI u, and XTerm modifyOtherKeys.
+	// TODO: Support XTerm modifyOtherKeys, and the kitty keyboard protocol's
+	// levels 2, 4 and 16.
 	switch key := k.(type) {
 	case KeyPressEvent:
 		if key.Mod&ModAlt != 0 {

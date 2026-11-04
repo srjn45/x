@@ -725,6 +725,12 @@ func (e *Emulator) registerDefaultCsiHandlers() {
 		return true
 	})
 
+	e.RegisterCsiHandler(ansi.Command('?', 0, 'u'), func(ansi.Params) bool {
+		// Request kitty keyboard flags [ansi.RequestKittyKeyboard]
+		_, _ = io.WriteString(e.pw, kittyFlagsReport(e.kittyFlagsInForce()))
+		return true
+	})
+
 	e.RegisterCsiHandler(ansi.Command('<', 0, 'u'), func(params ansi.Params) bool {
 		// Pop kitty keyboard flags [ansi.PopKittyKeyboard]
 		n, _, _ := params.Param(0, 1)
